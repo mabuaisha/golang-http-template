@@ -30,18 +30,21 @@ RUN apk --no-cache add ca-certificates \
     && mkdir -p /home/app \
     && chown app /home/app
 
+
+
 WORKDIR /home/app
 
-COPY --from=build /go/src/handler/handler    .
-COPY --from=build /usr/bin/fwatchdog         .
-COPY --from=build /go/src/handler/function/  .
+COPY --from=builder /usr/bin/fwatchdog         .
+COPY --from=builder /go/src/handler/function/  .
+COPY --from=builder /go/src/handler/handler    .
 
 RUN chown -R app /home/app
 
 USER app
 
 ENV fprocess="./handler"
-ENV mode="http"
-ENV upstream_url="http://127.0.0.1:8082"
+EXPOSE 8080
+
+HEALTHCHECK --interval=3s CMD [ -e /tmp/.lock ] || exit 1
 
 CMD ["./fwatchdog"]
